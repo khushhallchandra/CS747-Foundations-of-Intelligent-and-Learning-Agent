@@ -96,7 +96,32 @@ bool setRunParameters(int argc, char *argv[], int &numArms, int &randomSeed, uns
 }
 
 int thompson(int numArms,int prevArm,int reward){
-//implement beta function and return best arm
+  static vector<int> armSuccess;
+  static vector<int> armFailure;
+  cout<<"kcm\n";
+  
+  int i;
+  if(prevArm==-1){
+    for(i=0;i<numArms;i++){
+      armSuccess.push_back(0);
+      armFailure.push_back(0);
+    }
+  }else if(reward==1){
+      armSuccess[prevArm]+=1;
+  }else {
+      armFailure[prevArm]+=1;
+  }
+
+  float bestSample = -1;
+  float bestArm = 0;
+  for(i=0;i<numArms;i++){
+    float betaSample = 0
+    if(betaSample>bestSample){
+      bestSample = betaSample; 
+      bestArm = i;  
+    }
+          
+  } 
   return bestArm;
 }
 
@@ -110,40 +135,64 @@ int main(int argc, char *argv[]){
   string hostname = "localhost";
   int port = 5000;
 
-	//Set from command line, if any.
-	if(!(setRunParameters(argc, argv, numArms, randomSeed, horizon, explorationHorizon, hostname, port))){
-	//Error parsing command line.
-		options();
-		return 1;
-	}
+  //Set from command line, if any.
+  if(!(setRunParameters(argc, argv, numArms, randomSeed, horizon, explorationHorizon, hostname, port))){
+    //Error parsing command line.
+    options();
+    return 1;
+  }
 
-	struct sockaddr_in remoteSocketInfo;
-	struct hostent *hPtr;
-	int socketHandle;
+  struct sockaddr_in remoteSocketInfo;
+  struct hostent *hPtr;
+  int socketHandle;
 
-	bzero(&remoteSocketInfo, sizeof(sockaddr_in));
+  bzero(&remoteSocketInfo, sizeof(sockaddr_in));
   
-	if((hPtr = gethostbyname((char*)(hostname.c_str()))) == NULL){
-		cerr << "System DNS name resolution not configured properly." << "\n";
-		cerr << "Error number: " << ECONNREFUSED << "\n";
-		exit(EXIT_FAILURE);
-	}
+  if((hPtr = gethostbyname((char*)(hostname.c_str()))) == NULL){
+    cerr << "System DNS name resolution not configured properly." << "\n";
+    cerr << "Error number: " << ECONNREFUSED << "\n";
+    exit(EXIT_FAILURE);
+  }
 
-  	if((socketHandle = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-		close(socketHandle);
-		exit(EXIT_FAILURE);
-  	}
+  if((socketHandle = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+    close(socketHandle);
+    exit(EXIT_FAILURE);
+  }
 
-	memcpy((char *)&remoteSocketInfo.sin_addr, hPtr->h_addr, hPtr->h_length);
-	remoteSocketInfo.sin_family = AF_INET;
-	remoteSocketInfo.sin_port = htons((u_short)port);
+  memcpy((char *)&remoteSocketInfo.sin_addr, hPtr->h_addr, hPtr->h_length);
+  remoteSocketInfo.sin_family = AF_INET;
+  remoteSocketInfo.sin_port = htons((u_short)port);
 
-  	if(connect(socketHandle, (struct sockaddr *)&remoteSocketInfo, sizeof(sockaddr_in)) < 0){
+  if(connect(socketHandle, (struct sockaddr *)&remoteSocketInfo, sizeof(sockaddr_in)) < 0){
     //code added
-	    cout<<"connection problem"<<".\n";
-	    close(socketHandle);
-	    exit(EXIT_FAILURE);
-  	}
+    cout<<"connection problem"<<".\n";
+    close(socketHandle);
+    exit(EXIT_FAILURE);
+  }
+  // char sendBuf[256];
+  // char recvBuf[256];
+
+  // int armToPull = 0;
+  // sprintf(sendBuf, "%d", armToPull);
+
+  // cout << "Sending action " << armToPull << ".\n";
+  // while(send(socketHandle, sendBuf, strlen(sendBuf)+1, MSG_NOSIGNAL) >= 0){
+
+  //   float reward = 0;
+  //   unsigned long int pulls=0;
+  //   char temp;
+  //   recv(socketHandle, recvBuf, 256, 0);
+  //   sscanf(recvBuf, "%f %c %lu", &reward, &temp, &pulls);
+  //   cout << "Received reward " << reward << ".\n";
+  //   cout<<"Num of  pulls "<<pulls<<".\n";
+
+  //   armToPull = pulls % numArms;
+
+  //   sprintf(sendBuf, "%d", armToPull);
+  //   cout << "Sending action " << armToPull << ".\n";
+  // }
+
+
 
  	char sendBuf[256];
   	char recvBuf[256];
@@ -154,15 +203,13 @@ int main(int argc, char *argv[]){
   	cout << "Sending action " << armToPull << ".\n";
   	while(send(socketHandle, sendBuf, strlen(sendBuf)+1, MSG_NOSIGNAL) >= 0){
 		int reward = 0;
-    	unsigned long int pulls=0;
-	    char temp;
+		   unsigned long int pulls=0;
+    char temp;
 		recv(socketHandle, recvBuf, 256, 0);
+		// sscanf(recvBuf, "%d", &reward);
 		sscanf(recvBuf, "%d %c %lu", &reward, &temp, &pulls);
 		cout << "Received reward " << reward << ".\n";
-		cout<<"Num of  pulls "<<pulls<<".\n";
-
 		armToPull = thompson(numArms,armToPull,reward);
-
 		sprintf(sendBuf, "%d", armToPull);
 		cout << "Sending action " << armToPull << ".\n";
   }
@@ -173,3 +220,4 @@ int main(int argc, char *argv[]){
 
   return 0;
 }
+          
