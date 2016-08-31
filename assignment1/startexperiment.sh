@@ -32,3 +32,4 @@ cmd="./startclient.sh $numArms $horizon $explorationHorizon $hostname $port $ran
 $cmd > /dev/null 
 popd
 
+grep "Regret" serverlog.txt
