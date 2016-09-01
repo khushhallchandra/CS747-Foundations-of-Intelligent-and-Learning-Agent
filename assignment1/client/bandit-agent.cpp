@@ -98,7 +98,7 @@ bool setRunParameters(int argc, char *argv[], int &numArms, int &randomSeed, uns
 vector<int> S_i, F_i;
 
 int thompson(int numArms){
-
+    // This function returns arm to be sampeled
     // This is used to generate random number and hence the best arm
     // http://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution
     // Used code from here^ to do sampling from beta distribution
@@ -108,7 +108,7 @@ int thompson(int numArms){
     float bestSample = -1, bestArm = 0;
 
     for(int i=0;i<numArms;i++){
-        sftrabbit::beta_distribution<> beta(S_i[i]+1, F_i[i]+1);
+        sftrabbit::beta_distribution<> beta(2*(S_i[i]+1), 2*(F_i[i]+1));
         float betaSample = beta(genRnd); 
         if(betaSample>bestSample){
             bestSample = betaSample; 

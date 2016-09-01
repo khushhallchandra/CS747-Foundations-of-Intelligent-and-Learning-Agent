@@ -1,0 +1,26 @@
+I have implemented Thompson sampling algorithm.
+
+The algorithm can be found here:
+http://www.jmlr.org/proceedings/papers/v23/agrawal12/agrawal12.pdf
+
+The pseudocode for thompson sampling algorithm is as follows:
+
+----------------------------------------------------------------------------------------------------
+Thompson Sampling for Bernoulli bandits
+----------------------------------------------------------------------------------------------------
+	For each arm i = 1 to N set Si = 0, Fi = 0
+	foreach t = 1, 2, . . , do
+		For each arm i = 1, . . , N, sample θi(t) from the Beta(Si + 1, Fi + 1) distribution
+		Play arm i(t):= arg max i θi(t) and observe reward rt.
+		If r = 1, then Si(t) = Si(t) + 1, else Fi(t) = Fi(t) + 1.
+	end
+----------------------------------------------------------------------------------------------------
+
+References
+
+I have used external code for beta distribution sampling.
+The code can be found here:
+http://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution
+I have used this code as header file and it is present in the client folder named as "beta_distribution.h"
+
+The code is running perfectly fine on sl2 machines.
