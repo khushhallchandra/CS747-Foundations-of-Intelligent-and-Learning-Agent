@@ -1,0 +1,6 @@
+https://webdocs.cs.ualberta.ca/~sutton/book/4/node5.html
+
+I haved used the pseudo code from the above link.
+
+Tested the code when when S = 100 & A = 100.
+The runtime of my code ~13seconds
