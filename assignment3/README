@@ -1,0 +1,8 @@
+This code can be run by executing the file run.sh
+
+run.sh executes 3 files
+1. runReplace.py -> To run the agent using replace-trace versions of Sarsa
+2. runRegular.py -> To run the agent using regular versions of Sarsa
+3. plot.py -> This file reads the data from saved output folder and plot the graph
+
+Please note that sarsa agent is implememnted in the file -> agent.py
