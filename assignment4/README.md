@@ -11,7 +11,8 @@ An open source Carrom Simulator interface for testing intelligent/learning agent
 
 This is the 1.0 release of Carrom_rl - A Carrom Simulator, which provides an interface that allows you to design agents that that play carrom. It is built in python, using pygame + pymunk. This is the course project for [CS 747 - Foundations of Intelligent and Learning Agents](https://www.cse.iitb.ac.in/~shivaram/teaching/cs747-a2016/index.html), taught by [Prof. Shivaram Kalyanakrishnan](https://www.cse.iitb.ac.in/~shivaram/) at IIT Bombay.
 
-Bugs can be reported [here](https://github.com/samiranrl/Carrom_rl/issues).
+Please report bugs [here](https://github.com/samiranrl/Carrom_rl/issues), along with steps to reproduce it.
+
 Feedback is welcome. Enjoy!
 
 ## Carrom
@@ -25,12 +26,15 @@ The full description and list of rules and regulations can be found at http://ww
 
 ### Why Carrom? 
 
-It is a challenging domain:
+It is an exciting and challenging domain:
 
 - The state space is continuous
 - The action space is continuous, with added noise
 - The agent must adhere to the rules of carrom
-- In the two-player case, the agent must plan a strategy against an adversary, a multi-agent system.
+- In the two-player case, the agent must plan a strategy against an adversary
+- In 2v2 Carrom you must cooperate with another agent
+
+In short, it is a multi-agent adversarial game with continious state and action spaces, with noise added in the actions, with complex rules that cannot be intuited by the reward structure.
 
 ## Rules
 We slightly modify the rules of the game.
@@ -60,7 +64,6 @@ The goal of doubles is to design an agent, that wins against an opponent in a ga
 
 - The player to start/break must target white coins only. The other player must target black. Players' score increases by 1 if they pocket their own coin. 
 - You cannot pocket the queen unless you have pocketed another coin.
-- You get to strike in alternate turns unless you pocket the queen(see below)[Will be changed]
 - If the player pockets the opponent's coin, it counts as a foul. All coins pocketed that turn are kept in the center, and the score does not increase.
 - If all the coins are pocketed except the queen, the other player wins the match.
 - If you manage to pocket all of your own coins, and the opponent pockets and covers the queen, you win the match.
@@ -103,66 +106,49 @@ The following examples demonstrate some shots you can perform:
 
 - If a certain parameter of an action is out of range, the server generates the parameter uniformly at random in the legal range.
 - If the coin overlaps with the striker in the initial placement, the server generates a uniformly random free position.
-- For single player, the server permits a maximum of 200 strikes. If the agent does not manage to clear the board, the game is treated as incomplete, and the log file is not written.
 - The server accepts four decimal places of precision. 
-- The server also adds a zero mean gaussian noise to the actions. You can turn this off, but your final agent will be evaluated with noise.
+- The server also adds a zero mean gaussian noise to the actions of std 0.005 to the position, 2 to the angle, 0.01 to the force.
 - If you are Player 2 - on the opposite side of the board, the state you receive is "mirrored" assuming you are playing from Player 1's perspective. You don't have to write separate agents for Player 1 and Player 2.
 - The server has a timeout of 0.5 seconds. If any agent takes more time to send an action/sends an empty message, it is disqualified, and the other agent is considered the winner. In the single player case, it ends the game.
 -  The ports the agents use to connect to the server can be specified in the parameters. 
-- For single player, when the game finishes, a log file [logS1.txt] is appended with the following:
+- For single player, the server permits a maximum of 500 strikes. If the agent does not manage to clear the board, the game is treated as incomplete.
+- For doubles, the server permits a maximum of 200 strikes(by any player). If the board is not cleared, the game ends, and the player with the highest score is the winner. 
+- Severs write out experiment results in log files with current time stamps. They can be found in Carrom_rl/logs/ . You can generate the mean statistics using generate_stats.py in the same folder:
+- The Server is automatically called using start_experiment.py. 
 ```
-"number_of_strikes real_time_taken \n"
-```
-- Similarly, for doubles, a log file [logS2.txt] is appended with the following:
-```
-"number_of_strikes real_time_taken winner player_1_score player_2_score \n" 
-```
-- For single player, the server permits a maximum of 200 strikes. If the agent does not manage to clear the board, the game is treated as incomplete, and the log file is not written.
-- For doubles, the server permits a maximum of 200 strikes(by any player). If the board is not cleared, the game ends, and the player with the highest score is the winner. The log file is written.
-
-
-
-#### Server Parameters
-The single player server takes the following parameters:
-```
--v  [1/0] -- Turn visualization on/off [Default: 0]
--p  [n] -- The port the agent connects to. Must enter a valid port [Default: 12121]
--rr [1-20] -- Render rate, render every x frame. A higher number results in faster visualization, but choppy frames. Only used if -v is set to 1 [Default: 10]
--s  [1/0] -- Turn noise on/off. The final agent will be evaluated with noise. [Default: 1]
--rs [n] -- A random seed passed to the server rng [Default: 0]
-
+python generate_stats.py <logfile>
 ```
 
-The doubles server takes the following parameters:
-```
--v  [1/0]  -- Turn visualization on/off [Default: 0]
--p1 [n]  -- The port player 1(who strikes first) connects to. Must enter a valid port [Default: 12121]
--p2 [n] -- The port player 2 connects to. Must enter a valid port [Default: 34343]
--rr [1-20] -- Render rate, render every x frame. A higher number results in faster visualization, but choppy frames. Only used if -v is set to 1 [Default: 10]
--s  [1/0] -- Turn noise on/off. The final agent will be evaluated with noise. [Default: 1]
--rs [n] -- A random seed passed to the server rng [Default: 0]
-
-```
 #### Configuration Parameters
 
 The parameters of the game such as friction, elasticity, dimensions and weights of objects, etc are coded in identical Utils.py for both Servers. Use this file as a reference. These parameters should not be changed, as agents must work using the parameters mentioned in the file.
 
-### Sample Agents
+### Agent parameters
 
-There are 2 Sample agents to get you started.
+There is one sample agent to get you started. start_agent.py samples the action space uniformly at random. The agent is automatically called using start_experiment.py. 
 
-- Agent_random samples the action space uniformly at random.
-- Agent_improved has built in logic to target the coins into the pocket, and performs significantly better than random.
+Parameters passed to the agent are solely disambiguate between 1 player and 2 player games, and to inform the agent whether it is player 1 or 2. A seed is passed to the agent. You must initialize your rng with this seed, to make your results reproducible and consistent across several runs. If in doubt, look at the sample agent provided.
 
-The agents use one parameter:
-
+### Experiment Parameters
+The experiment is controlled by the parameters passed to start_experiment.py. It calls the server and the agent with appropriate parameters.
 ```
--p [n] -- The port the agent connects to. Must enter a valid port [Default: 12121]
+-np or --num-players [1/2] - 1 Player or 2 Player Carrom [Default: 1]
+-ne or --num-experiments [n] - Number of experiments to run. If this is set > 1. the rng passed to the servers and the agents is the current trial number. [Default: 1]
+-v or --visualization  [1/0] - Turn visualization on/off [Default: 0]
+-p1 or --port1 [n] - The port player 1 agent connects to. Must enter a valid port [Default: 12121]
+-p2 or --port1 [n] - The port player 2 agent connects to. Must enter a valid port [Default: 34343]
+-rr or --render-rate [1-20] - Render rate, render every x frame. A higher number results in faster visualization, but choppy frames. Only used if -v is set to 1 [Default: 10]
+-n or --noise  [1/0] - Turn noise on/off. The final agent will be evaluated with noise. [Default: 1]
+-rs or --random-seed [n] - A random seed passed to the server rng [Default: 0]
+-a1 or --agent-1-location [file_path] - relative/full path to player 1 agent [Default: carrom_agent/start_agent.py]
+-a2 or --agent-2-location [file_path] - relative/full path to player 2 agent [Default: carrom_agent/start_agent.py]
 ```
+At the end of an experiment, a logfile is written summarising the statistics in logs/
 
 ## Quick Start
 
 Install main dependences: pygame (1.9.2) and pymunk (5.0)
+The code works on python (2.7.12)
 ```
 sudo apt-get install python-pip
 sudo pip install pygame
@@ -175,30 +161,48 @@ Fork the repo/download it.
 git clone https://github.com/samiranrl/Carrom_rl.git
 ```
 
-Start the one player server. Server and agent must be launched from separate terminals.
+Visualize one single player game
 
 ```
-cd Carrom_rl/Carrom_1Player/
-python ServerP1.py -p 12121 -v 1
-python Agent_random.py -p 12121
+cd Carrom_rl/
+python start_experiment.sh -v 1
 ```
 
-Start the doubles server. Server and agents must be launched from separate terminals.
+Simulate 10 single player games
 
 ```
-cd Carrom_rl/Carrom_2Player/
-python ServerP1.py -p1 12121 -p2 34343 -v 1
-python Agent_random.py -p 12121
-python Agent_improved.py -p 34343
+cd Carrom_rl/
+python start_experiment.sh -ne 10
 ```
 
-The function for computing the next state, given a state and action is provided, in case you want to compute one-step simulations. You can change the params.py file as required.
+Generate statistics from the previous experiment
 
 ```
-cd Carrom_rl/One_Step/
+cd logs/
+python generate_stats.py <logfile>
+```
+
+Perform the experiment with 2 player Carrom
+
+```
+cd Carrom_rl/
+python start_experiment.sh -v 1 -np 2
+```
+
+You have access to one step noise free ground truth data using: simulate(state,action)->next_state, reward
+
+```
+cd Carrom_rl/one_step/
 python simulation.py
 ```
 
 ## What to submit?
 
-TBD
+Please read Readme.txt
+
+You must write a carrom agent, which clears the single player board in <=30 turns on average. generate_stats.py will be called for >=1000 experiments. If the data is invalid, for eg: you have a connection timeout/runtime error/exceed 500 strikes, the statistics will not be counted, so make sure your agent is fully functional (in the sl2 machines) before submission. If confused, open **start_agent.py**, which has helpful built in logic to connect to the carrom server, parse the state and send an action.
+
+### Changes
+<b>Version 1.0 - Initial release</b>
+
+Single player server is ready.There might be some issues with the doubles server, they will be fixed later.
