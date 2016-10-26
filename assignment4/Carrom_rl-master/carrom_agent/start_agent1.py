@@ -8,7 +8,6 @@ import sys
 import argparse
 import random
 import ast
-import math
 
 # Parse arguments
 
@@ -18,7 +17,7 @@ parser.add_argument('-np', '--num-players', dest="num_players", type=int,
                     default=1,
                     help='1 Player or 2 Player')
 parser.add_argument('-p', '--port', dest="port", type=int,
-                    default=123,
+                    default=12121,
                     help='port')
 parser.add_argument('-rs', '--random-seed', dest="rng", type=int,
                     default=0,
@@ -55,57 +54,23 @@ def agent_1player(state):
 
     flag = 1
     # print state
-    print "******************"
     try:
         state, reward = parse_state_message(state)  # Get the state and reward
-        print state
-        print reward
     except:
         pass
-	# Assignment 4: your agent's logic should be coded here
-    white = []
-    black = []
-    red = []
-    if 'White_Locations' in state:
-        white = state['White_Locations']
-    if 'Black_Locations' in state:
-        black = state['Black_Locations']
-    if 'Red_Location' in state:
-        red = state['Red_Location']
-    global count
 
-    pos = random.random()
-    angle = random.randrange(-45, 225)
-    force = random.random()
-    if(count<4):
-        a = str(0.5) + ',' + str(90) + ',' + str(1)
-    elif(count<11):
-        a = str(0) + ',' + str(135) + ',' + str(1)
-    else:
-        print len(white),len(black),len(red),"------------------"
+    # Assignment 4: your agent's logic should be coded here
 
-        #for (x,y) in (white+black):
-        #    if(y<170):
-        #        if(x<400):#pocket in lower left
-        #            angle = 180 + math.atan((y-0)/(x-0))
-        #            pos = (x-y)/(y*1.0)
-        #        else:#pocket in lower right
-        #            angle = - math.atan((y-0)/(x-0))
-        #            pos = ((170-y)*(x-800)/(y*1.0) + x - 170)/170.0
-        #    else:
-        #        angle=45
-        #        pos = 1
-        #    break
-        angle =45
-        pos = 1
-    	a = str(pos) + ',' + str(angle) + ',' + str(1)
+    a = str(random.random()) + ',' + \
+        str(random.randrange(-45, 225)) + ',' + str(random.random())
+
     try:
         s.send(a)
     except Exception as e:
         print "Error in sending:",  a, " : ", e
         print "Closing connection"
         flag = 0
-    count = count +1
+
     return flag
 
 
@@ -126,7 +91,7 @@ def agent_2player(state, color):
 
     return flag
 
-count=1
+
 while 1:
     state = s.recv(1024)  # Receive state from server
     if num_players == 1:
